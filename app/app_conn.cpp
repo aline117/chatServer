@@ -26,6 +26,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <app_utility.hpp>
 #include <app_server.hpp>
 #include "app_conn.hpp"
+#include "io.hpp"
 
 IConnectionManager::IConnectionManager()
 {
@@ -42,8 +43,8 @@ CConnection::CConnection(IConnectionManager* cm, st_netfd_t c)
     stfd = c;
     disposed = false;
     expired = false;
-    
-    // the client thread should reap itself, 
+
+    // the client thread should reap itself,
     // so we never use joinable.
     // TODO: FIXME: maybe other thread need to stop it.
     // @see: https://github.com/ossrs/srs/issues/78
@@ -53,7 +54,7 @@ CConnection::CConnection(IConnectionManager* cm, st_netfd_t c)
 CConnection::~CConnection()
 {
     dispose();
-    
+
     srs_freep(pthread);
 }
 
@@ -62,9 +63,9 @@ void CConnection::dispose()
     if (disposed) {
         return;
     }
-    
+
     disposed = true;
-    
+
     /**
      * when delete the connection, stop the connection,
      * close the underlayer socket, delete the thread.
@@ -80,24 +81,24 @@ int CConnection::start()
 int CConnection::cycle()
 {
     int ret = ERROR_SUCCESS;
-    
+
     _thContext->generate_id();
     id = _thContext->get_id();
-    
+
     ip = srs_get_peer_ip(st_netfd_fileno(stfd));
-    
+
     ret = do_cycle();
-    
+
     // if socket io error, set to closed.
     if (srs_is_client_gracefully_close(ret)) {
         ret = ERROR_SOCKET_CLOSED;
     }
-    
+
     // success.
     if (ret == ERROR_SUCCESS) {
         srs_trace("client finished.");
     }
-    
+
     // client close peer.
     if (ret == ERROR_SOCKET_CLOSED) {
         srs_warn("client disconnect peer. ret=%d", ret);
@@ -135,6 +136,24 @@ IMConn::~IMConn()
 int IMConn::do_cycle()
 {
     int ret = ERROR_SUCCESS;
+
+    StSocket skt(stfd);
+
+    while (!disposed) {
+        //ret = stream_service_cycle();
+
+        //skt.write("",12,ewr);
+
+        // stream service must terminated with error, never success.
+        // when terminated with success, it's user required to stop.
+        if (ret == ERROR_SUCCESS) {
+            continue;
+        }
+
+        // for other system control message, fatal error.
+        srs_error("control message(%d) reject as error. ret=%d", ret, ret);
+        return ret;
+    }
 
     return ret;
 }

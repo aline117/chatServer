@@ -41,7 +41,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * the socket provides TCP socket over st,
  * that is, the sync socket mechanism.
  */
-class SrsStSocket : public ISrsProtocolReaderWriter
+class SrsStSocket : public IReaderWriter
 {
 private:
     int64_t recv_timeout;

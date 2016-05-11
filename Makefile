@@ -13,9 +13,9 @@ WORKDIR=$(HOME)
 LINKER = $(CXX)
 
 CXXFLAGS = -fmessage-length=0
-#CXXFLAGS += -Wall
+CXXFLAGS += -Wall
 #CXXFLAGS += -Werror
-CXXFLAGS += -Wunused-result
+#CXXFLAGS += -Wunused-result
 #CXXFLAGS += -Wall -D_REENTRANT
 #CXXFLAGS += -D_GNU_SOURCE
 CXXFLAGS += -g
